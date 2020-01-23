@@ -153,8 +153,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-
-        mUserRef.child("online").setValue(false);
+        mUserRef.child("online").setValue(true);
     }
 
     @Override

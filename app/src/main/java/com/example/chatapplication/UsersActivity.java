@@ -72,9 +72,9 @@ public class UsersActivity extends AppCompatActivity {
                 holder.mView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent profileIntent  = new Intent(UsersActivity.this, ProfileActivity.class);
-                        profileIntent.putExtra("user_id", selected_uid);
-                        startActivity(profileIntent);
+                    Intent profileIntent  = new Intent(UsersActivity.this, ProfileActivity.class);
+                    profileIntent.putExtra("user_id", selected_uid);
+                    startActivity(profileIntent);
                     }
                 });
             }
