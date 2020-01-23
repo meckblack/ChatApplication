@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
@@ -28,6 +29,8 @@ public class UsersActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private RecyclerView mUsersList;
     private DatabaseReference mUsersDatabase;
+    private DatabaseReference mUserRef;
+    private FirebaseAuth mAuth;
     private FirebaseRecyclerAdapter<Users, UsersViewHolder> firebaseRecyclerAdapter;
     private ProgressDialog mProgressDialog;
 
@@ -37,7 +40,8 @@ public class UsersActivity extends AppCompatActivity {
         setContentView(R.layout.activity_users);
 
         mUsersDatabase = FirebaseDatabase.getInstance().getReference().child("Users");
-
+        mAuth = FirebaseAuth.getInstance();
+        mUserRef = FirebaseDatabase.getInstance().getReference().child("Users").child(mAuth.getCurrentUser().getUid());
         mProgressDialog = new ProgressDialog(UsersActivity.this);
         mProgressDialog.setTitle("Fetch All Users");
         mProgressDialog.setMessage("Please wait while we load all the users");
@@ -77,7 +81,7 @@ public class UsersActivity extends AppCompatActivity {
             @NonNull
             @Override
             public UsersViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.display_user_layout, parent, false);
+                    View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.display_user_layout, parent, false);
                 return new UsersViewHolder(view);
             }
         };
@@ -94,6 +98,7 @@ public class UsersActivity extends AppCompatActivity {
     public void onStop() {
         super.onStop();
         firebaseRecyclerAdapter.stopListening();
+        mUserRef.child("online").setValue(false);
     }
 
     public static class UsersViewHolder extends RecyclerView.ViewHolder {

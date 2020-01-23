@@ -48,6 +48,7 @@ public class ProfileActivity extends AppCompatActivity {
     private DatabaseReference mFriendDatabase;
     private DatabaseReference mNotificationDatabase;
     private DatabaseReference mRootRef;
+    private DatabaseReference mUserRef;
 
     //Fire base current logged in user
     private FirebaseUser mCurrentUser;
@@ -84,7 +85,7 @@ public class ProfileActivity extends AppCompatActivity {
         mProgress.show();
 
         final String user_id = getIntent().getStringExtra("user_id");
-
+        mUserRef = FirebaseDatabase.getInstance().getReference().child("Users").child(user_id);
         mUserDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child(user_id);
         mRootRef = FirebaseDatabase.getInstance().getReference();
         mFriendDatabase = FirebaseDatabase.getInstance().getReference().child("Friends");
@@ -163,110 +164,110 @@ public class ProfileActivity extends AppCompatActivity {
         mSendFriendRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+            mSendFriendRequest.setEnabled(false);
+            // -------------------- NOT FRIENDS STATE -------------------- //
+            if(mCurrent_state.equals("not_friends")) {
+                mProgress.setTitle("Send Friend Request");
+                mProgress.setMessage("Please wait while we send the friend request");
+                mProgress.setCanceledOnTouchOutside(false);
+                mProgress.show();
 
-                mSendFriendRequest.setEnabled(false);
-                // -------------------- NOT FRIENDS STATE -------------------- //
-                if(mCurrent_state.equals("not_friends")) {
-                    mProgress.setTitle("Send Friend Request");
-                    mProgress.setMessage("Please wait while we send the friend request");
-                    mProgress.setCanceledOnTouchOutside(false);
-                    mProgress.show();
+                DatabaseReference newNotificationRef = mRootRef.child("Notifications").child(user_id).push();
+                String newNotificationId = newNotificationRef.getKey();
 
-                    DatabaseReference newNotificationRef = mRootRef.child("Notifications").child(user_id).push();
-                    String newNotificationId = newNotificationRef.getKey();
+                HashMap<String, String> notificationData = new HashMap<>();
+                notificationData.put("from", mCurrentUser.getUid());
+                notificationData.put("type", "request");
 
-                    HashMap<String, String> notificationData = new HashMap<>();
-                    notificationData.put("from", mCurrentUser.getUid());
-                    notificationData.put("type", "request");
+               Map requestMap = new HashMap();
+               requestMap.put("Friend_req/" + mCurrentUser.getUid() + "/" + user_id + "/" + "request_type", "sent");
+               requestMap.put("Friend_req/" + user_id + "/" + mCurrentUser.getUid() + "/" + "request_type", "received");
+               requestMap.put("Notifications/" + user_id + "/" + newNotificationId, notificationData);
 
-                   Map requestMap = new HashMap();
-                   requestMap.put("Friend_req/" + mCurrentUser.getUid() + "/" + user_id + "/" + "request_type", "sent");
-                   requestMap.put("Friend_req/" + user_id + "/" + mCurrentUser.getUid() + "/" + "request_type", "received");
-                   requestMap.put("Notifications/" + user_id + "/" + newNotificationId, notificationData);
+               mRootRef.updateChildren(requestMap, new DatabaseReference.CompletionListener() {
+                   @Override
+                   public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                    if(databaseError != null) {
+                        Toast.makeText(ProfileActivity.this, "Failed sending request", Toast.LENGTH_LONG).show();
+                    }
+                   mCurrent_state = "req_sent";
+                   mSendFriendRequest.setText("CANCEL FRIEND REQUEST");
+                   mProgress.dismiss();
+                   Toast.makeText(ProfileActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
 
-                   mRootRef.updateChildren(requestMap, new DatabaseReference.CompletionListener() {
-                       @Override
-                       public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
-                        if(databaseError != null) {
-                            Toast.makeText(ProfileActivity.this, "Failed sending request", Toast.LENGTH_LONG).show();
-                        }
-                       mCurrent_state = "req_sent";
-                       mSendFriendRequest.setText("CANCEL FRIEND REQUEST");
-                       mProgress.dismiss();
-                       Toast.makeText(ProfileActivity.this, "Friend Request Sent", Toast.LENGTH_SHORT).show();
+                   }
+               });
+            }
 
-                       }
-                   });
-                }
+            // -------------------- CANCEL FRIEND REQUEST STATE -------------------- //
+            if(mCurrent_state.equals("req_sent")) {
+                mProgress.setTitle("Cancel Friend Request");
+                mProgress.setMessage("Please wait while we cancel the friend request");
+                mProgress.setCanceledOnTouchOutside(false);
+                mProgress.show();
 
-                // -------------------- CANCEL FRIEND REQUEST STATE -------------------- //
-                if(mCurrent_state.equals("req_sent")) {
-                    mProgress.setTitle("Cancel Friend Request");
-                    mProgress.setMessage("Please wait while we cancel the friend request");
-                    mProgress.setCanceledOnTouchOutside(false);
-                    mProgress.show();
+                Map notificationMap = new HashMap();
+                notificationMap.put("Notifications/" + user_id + "/", null);
+                notificationMap.put("Friend_req/" + mCurrentUser.getUid() + "/", null);
+                notificationMap.put("Friend_req/" + user_id + "/", null);
 
-                    Map notificationMap = new HashMap();
-                    notificationMap.put("Notifications/" + user_id + "/", null);
-                    notificationMap.put("Friend_req/" + mCurrentUser.getUid() + "/", null);
-                    notificationMap.put("Friend_req/" + user_id + "/", null);
+                mRootRef.updateChildren(notificationMap, new DatabaseReference.CompletionListener() {
+                    @Override
+                    public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                    if(databaseError == null) {
+                        mCurrent_state = "not_friends";
+                        mSendFriendRequest.setText("SEND FRIEND REQUEST");
+                        mSendFriendRequest.setEnabled(true);
+                        mProgress.dismiss();
+                        Toast.makeText(ProfileActivity.this, "Friend Request Cancelled", Toast.LENGTH_SHORT).show();
 
-                    mRootRef.updateChildren(notificationMap, new DatabaseReference.CompletionListener() {
-                        @Override
-                        public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
-                            if(databaseError == null) {
-                                mCurrent_state = "not_friends";
-                                mSendFriendRequest.setText("SEND FRIEND REQUEST");
-                                mSendFriendRequest.setEnabled(true);
-                                mProgress.dismiss();
-                                Toast.makeText(ProfileActivity.this, "Friend Request Cancelled", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(ProfileActivity.this, "Error: Friend request was not cancelled", Toast.LENGTH_SHORT)
+                            .show();
+                    }
+                    }
+                });
+            }
 
-                            } else {
-                                Toast.makeText(ProfileActivity.this, "Error: Friend request was not cancelled", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }
+            // -------------------- REQ RECEIVED STATE -------------------- //
+            if(mCurrent_state.equals("req_received")) {
 
-                // -------------------- REQ RECEIVED STATE -------------------- //
-                if(mCurrent_state.equals("req_received")) {
+                mProgress.setTitle("Accept Friend Request");
+                mProgress.setMessage("Please wait while we accept the friend request");
+                mProgress.setCanceledOnTouchOutside(false);
+                mProgress.show();
 
-                    mProgress.setTitle("Accept Friend Request");
-                    mProgress.setMessage("Please wait while we accept the friend request");
-                    mProgress.setCanceledOnTouchOutside(false);
-                    mProgress.show();
+                final String currentDate = DateFormat.getDateInstance().format(new Date());
 
-                    final String currentDate = DateFormat.getDateInstance().format(new Date());
+                Map friendsMap = new HashMap();
+                friendsMap.put("Friends/" + mCurrentUser.getUid() + "/" + user_id + "/date", currentDate);
+                friendsMap.put("Friends/" + user_id + "/" + mCurrentUser.getUid() + "/date", currentDate);
 
-                    Map friendsMap = new HashMap();
-                    friendsMap.put("Friends/" + mCurrentUser.getUid() + "/" + user_id + "/date", currentDate);
-                    friendsMap.put("Friends/" + user_id + "/" + mCurrentUser.getUid() + "/date", currentDate);
+                friendsMap.put("Friend_req/" + mCurrentUser.getUid() + "/" + user_id, null);
+                friendsMap.put("Friend_req/" + user_id + "/" + mCurrentUser.getUid(), null);
 
-                    friendsMap.put("Friend_req/" + mCurrentUser.getUid() + "/" + user_id, null);
-                    friendsMap.put("Friend_req/" + user_id + "/" + mCurrentUser.getUid(), null);
+                mRootRef.updateChildren(friendsMap, new DatabaseReference.CompletionListener() {
+                    @Override
+                    public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                    if(databaseError == null) {
+                        mProgress.dismiss();
+                        Toast.makeText(ProfileActivity.this,
+                                "Friend Request Accepted", Toast.LENGTH_SHORT).show();
+                        mCurrent_state = "friends";
+                        mSendFriendRequest.setText("UN FRIEND " + name);
+                        mSendFriendRequest.setEnabled(true);
+                    }
+                    else {
+                        mProgress.dismiss();
+                        Toast.makeText(ProfileActivity.this,
+                                "Error: Failed accepting friend request", Toast.LENGTH_SHORT).show();
+                    }
+                    }
+                });
+            }
 
-                    mRootRef.updateChildren(friendsMap, new DatabaseReference.CompletionListener() {
-                        @Override
-                        public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
-                            if(databaseError == null) {
-                                mProgress.dismiss();
-                                Toast.makeText(ProfileActivity.this,
-                                        "Friend Request Accepted", Toast.LENGTH_SHORT).show();
-                                mCurrent_state = "friends";
-                                mSendFriendRequest.setText("UN FRIEND " + name);
-                                mSendFriendRequest.setEnabled(true);
-                            }
-                            else {
-                                mProgress.dismiss();
-                                Toast.makeText(ProfileActivity.this,
-                                        "Error: Failed accepting friend request", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }
-
-                // -------------------- UN FRIENDS STATE -------------------- //
-                if(mCurrent_state.equals("friends"))  {
+            // -------------------- UN FRIENDS STATE -------------------- //
+            if(mCurrent_state.equals("friends"))  {
                     mProgress.setTitle("Un Friend " + name);
                     mProgress.setMessage("Please wait while we un friend " + name);
                     mProgress.setCanceledOnTouchOutside(false);
@@ -276,26 +277,32 @@ public class ProfileActivity extends AppCompatActivity {
 //                    friendsMap.put("Friends/", mCurrentUser.getUid());
 
                     mFriendDatabase.child(mCurrentUser.getUid()).child(user_id).removeValue()
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    mFriendDatabase.child(user_id).child(mCurrentUser.getUid()).removeValue()
-                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                @Override
-                                                public void onSuccess(Void aVoid) {
-                                                    mCurrent_state = "not_friends";
-                                                    mSendFriendRequest.setText("SEND FRIEND REQUEST");
-                                                    mSendFriendRequest.setEnabled(true);
-                                                    mProgress.dismiss();
-                                                    Toast.makeText(ProfileActivity.this, "Un friend " + name + " successful",
-                                                            Toast.LENGTH_SHORT).show();
-                                                }
-                                            });
-                                }
-                            });
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                mFriendDatabase.child(user_id).child(mCurrentUser.getUid()).removeValue()
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                        mCurrent_state = "not_friends";
+                                        mSendFriendRequest.setText("SEND FRIEND REQUEST");
+                                        mSendFriendRequest.setEnabled(true);
+                                        mProgress.dismiss();
+                                        Toast.makeText(ProfileActivity.this, "Un friend " + name + " successful",
+                                            Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                            }
+                        });
                 }
             }
         });
 
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mUserRef.child("online").setValue(false);
     }
 }

@@ -46,6 +46,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     //Fire base database reference
     private DatabaseReference mUserDatabase;
+    private DatabaseReference mUserRef;
     //Fire base Current user
     private FirebaseUser mCurrentUser;
     // Fire base storage reference
@@ -79,6 +80,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         mCurrentUser = FirebaseAuth.getInstance().getCurrentUser();
         String current_uid = mCurrentUser.getUid();
+        mUserRef = FirebaseDatabase.getInstance().getReference().child("Users").child(current_uid);
         mUserDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child(current_uid);
         mUserDatabase.keepSynced(true);
 
@@ -146,6 +148,13 @@ public class SettingsActivity extends AppCompatActivity {
                 .start(SettingsActivity.this);
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        mUserRef.child("online").setValue(false);
     }
 
     @Override

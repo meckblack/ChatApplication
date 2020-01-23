@@ -8,7 +8,6 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -20,16 +19,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class StatusActivity extends AppCompatActivity {
-
     private Toolbar mToolbar;
     private Button mSaveChangesButton;
     private TextInputLayout mNewStatus;
-
     //Progress Dialog
     private ProgressDialog mProgress;
-
     //Fire base database reference
     private DatabaseReference mStatusDatabase;
+    private DatabaseReference mUserRef;
     private FirebaseUser mCurrentUser;
 
     @Override
@@ -48,39 +45,39 @@ public class StatusActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mNewStatus.getEditText().setText(status_value);
 
-
-
         //Fire base: Get the current User
         mCurrentUser = FirebaseAuth.getInstance().getCurrentUser();
         String current_uid = mCurrentUser.getUid();
+        mUserRef = FirebaseDatabase.getInstance().getReference().child("Users").child(current_uid);
 
         //Fire base: Getting the exact table
         mStatusDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child(current_uid);
-
-
-
-
         mSaveChangesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Progress bar
-                mProgress = new ProgressDialog(StatusActivity.this);
-                mProgress.setTitle("Saving Changes");
-                mProgress.setMessage("Please wait while we save changes");
-                mProgress.show();
-                String status = mNewStatus.getEditText().getText().toString();
-                mStatusDatabase.child("status").setValue(status).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if(task.isSuccessful()) {
-                            mProgress.dismiss();
-                        } else {
-                            Toast.makeText(StatusActivity.this, "There was an error in saving changes", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-
+            //Progress bar
+            mProgress = new ProgressDialog(StatusActivity.this);
+            mProgress.setTitle("Saving Changes");
+            mProgress.setMessage("Please wait while we save changes");
+            mProgress.show();
+            String status = mNewStatus.getEditText().getText().toString();
+            mStatusDatabase.child("status").setValue(status).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                if(task.isSuccessful()) {
+                    mProgress.dismiss();
+                } else {
+                    Toast.makeText(StatusActivity.this, "There was an error in saving changes", Toast.LENGTH_SHORT).show();
+                }
+                }
+            });
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mUserRef.child("online").setValue(false);
     }
 }
