@@ -79,7 +79,7 @@ public class FriendsFragment extends Fragment {
                 mUsersDatabase.child(list_user_id).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String userName = dataSnapshot.child("name").getValue().toString();
+                        final String userName = dataSnapshot.child("name").getValue().toString();
                         String userStatus = dataSnapshot.child("status").getValue().toString();
                         String userThumbImage  = dataSnapshot.child("thumb_image").getValue().toString();
                         if (dataSnapshot.hasChild("online")) {
@@ -96,7 +96,7 @@ public class FriendsFragment extends Fragment {
                             public void onClick(View v) {
                                 CharSequence options[] = new CharSequence[] {"Open Profile", "Send Message"};
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                                builder.setTitle("SELECT OPTION");
+                                 // builder.setTitle("SELECT OPTION");
 
                                 builder.setItems(options, new DialogInterface.OnClickListener() {
                                     @Override
@@ -111,6 +111,7 @@ public class FriendsFragment extends Fragment {
                                             case 1:
                                                 Intent chatIntent  = new Intent(getContext(), ChatActivity.class);
                                                 chatIntent.putExtra("user_id", list_user_id);
+                                                chatIntent.putExtra("user_name", userName);
                                                 startActivity(chatIntent);
                                         }
                                     }
