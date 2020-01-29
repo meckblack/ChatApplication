@@ -31,7 +31,7 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
 
         mLastSeenView = findViewById(R.id.chat_last_seen);
-        mChatDisplayName = findViewById(R.id.chat_display_name);
+        //mChatDisplayName = findViewById(R.id.chat_display_name);
         mChatToolbar = findViewById(R.id.chat_app_bar);
         setSupportActionBar(mChatToolbar);
         ActionBar actionBar = getSupportActionBar();

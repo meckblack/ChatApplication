@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mAuth = FirebaseAuth.getInstance();
-        mUserRef = FirebaseDatabase.getInstance().getReference().child("Users").child(mAuth.getCurrentUser().getUid());
+
         mToolbar = findViewById(R.id.main_page_toolbar);
         mViewPager = findViewById(R.id.main_tabPager);
         mTabLayout = findViewById(R.id.main_tabs);
@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         if(currentUser == null) {
             sendToStart();
         } else {
+            mUserRef = FirebaseDatabase.getInstance().getReference().child("Users").child(mAuth.getCurrentUser().getUid());
             mUserRef.child("online").setValue(true);
         }
     }
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
+            mUserRef = FirebaseDatabase.getInstance().getReference().child("Users").child(mAuth.getCurrentUser().getUid());
             mUserRef.child("online").setValue(false);
         }
     }

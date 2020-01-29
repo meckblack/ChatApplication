@@ -58,18 +58,18 @@ public class LoginActivity extends AppCompatActivity {
         mLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = mLoginEmail.getEditText().getText().toString();
-                String password = mLoginPassword.getEditText().getText().toString();
+            String email = mLoginEmail.getEditText().getText().toString();
+            String password = mLoginPassword.getEditText().getText().toString();
 
-                if(!TextUtils.isEmpty(email) || !TextUtils.isEmpty(password)){
-                    mLoginProgress.setTitle("Logging In");
-                    mLoginProgress.setMessage("Please wait while we check your credentials!!!");
-                    mLoginProgress.setCanceledOnTouchOutside(false);
-                    mLoginProgress.show();
-                    login_user(email, password);
-                } else {
-                    Toast.makeText(LoginActivity.this, "Please enter all fields", Toast.LENGTH_LONG).show();
-                }
+            if(!TextUtils.isEmpty(email) || !TextUtils.isEmpty(password)){
+                mLoginProgress.setTitle("Logging In");
+                mLoginProgress.setMessage("Please wait while we check your credentials!!!");
+                mLoginProgress.setCanceledOnTouchOutside(false);
+                mLoginProgress.show();
+                login_user(email, password);
+            } else {
+                Toast.makeText(LoginActivity.this, "Please enter all fields", Toast.LENGTH_LONG).show();
+            }
 
             }
         });
@@ -80,28 +80,26 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
             if(task.isSuccessful()){
-
                 final FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
                 mUser.getIdToken(true).addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
                     @Override
                     public void onComplete(@NonNull Task<GetTokenResult> task) {
-                        if(task.isSuccessful()){
-                            String deviceTokenId = task.getResult().getToken();
-                            String current_user_id = mAuth.getCurrentUser().getUid();
+                    if(task.isSuccessful()){
+                        String deviceTokenId = task.getResult().getToken();
+                        String current_user_id = mAuth.getCurrentUser().getUid();
+                        mUserDatabase.child(current_user_id).child("device_token").setValue(deviceTokenId)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                mLoginProgress.dismiss();
+                                Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
+                                mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(mainIntent);
+                                finish();
 
-                            mUserDatabase.child(current_user_id).child("device_token").setValue(deviceTokenId)
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            mLoginProgress.dismiss();
-                                            Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
-                                            mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                            startActivity(mainIntent);
-                                            finish();
-
-                                        }
-                                    });
-                        }
+                                }
+                            });
+                    }
                     }
                 });
             } else {
