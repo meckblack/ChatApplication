@@ -17,7 +17,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextClock;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -83,7 +82,7 @@ public class FriendsFragment extends Fragment {
                         String userStatus = dataSnapshot.child("status").getValue().toString();
                         String userThumbImage  = dataSnapshot.child("thumb_image").getValue().toString();
                         if (dataSnapshot.hasChild("online")) {
-                            Boolean userOnline = (Boolean) dataSnapshot.child("online").getValue();
+                            String userOnline =  dataSnapshot.child("online").getValue().toString();
                             holder.setUserOnline(userOnline);
                         }
 
@@ -180,9 +179,9 @@ public class FriendsFragment extends Fragment {
             Picasso.get().load(thumb_image).placeholder(R.drawable.avatar).into(userImageView);
         }
 
-        public void setUserOnline(Boolean online_status) {
+        public void setUserOnline(String online_status) {
             ImageView userOnlineView = mView.findViewById(R.id.display_user_online);
-            if (online_status.equals(true)) {
+            if (online_status.equals("true")) {
                 userOnlineView.setVisibility(View.VISIBLE);
             } else {
                 userOnlineView.setVisibility(View.INVISIBLE);

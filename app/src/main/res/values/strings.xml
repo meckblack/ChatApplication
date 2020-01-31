@@ -31,4 +31,6 @@
     <string name="send_message">Send Message</string>
     <string name="enter_message">Enter Message</string>
     <string name="attach_file">Attach File</string>
+    <string name="last_seen">Last Seen</string>
+    <string name="textview">TextView</string>
 </resources>

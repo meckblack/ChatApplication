@@ -24,7 +24,7 @@
         app:layout_constraintVertical_bias="0.001" />
 
     <TextView
-        android:id="@+id/chat_display_name"
+        android:id="@+id/chat_app_bar_display_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
@@ -35,15 +35,15 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/chat_last_seen"
+        android:id="@+id/chat_app_bar_online"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Last Seen"
+        android:text="@string/last_seen"
         android:textColor="@android:color/white"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/chat_display_name" />
+        app:layout_constraintTop_toBottomOf="@+id/chat_app_bar_display_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
